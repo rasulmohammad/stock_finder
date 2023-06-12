@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script defer src = "script.js"></script>
+    <link rel = "stylesheet" href = "style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mukta&family=Secular+One&family=Tilt+Neon&display=swap" rel="stylesheet">
+    <title>Stocks with Rasul</title>
+</head>
+<body>
+    <h1 class = "title">Let's make some money!</h1>
+    <div id = "searchContainer">
+        <form id = "search_bar">
+            <input type = "text" id = "search_input" placeholder="Enter a ticker symbol here">
+            <input type = "text" id = "year" placeholder="Enter year">
+            <input type = "text" id = "month" placeholder="Enter month #">
+            <input type = "text" id = "day" placeholder="Enter day #">
+            <button class = "searchBtn" type = "submit">Search</button>
+        </form>
+    </div>
+    <div id="answer">
+        <h2>Final Verdict</h2>
+    </div>
+    <br>
+    <br>
+    <div id = "lineChart">
+        <canvas id = "myChart"></canvas>
+    </div>
+    <div id = "destroying">
+        <button id = "destroyCanvas">Destroy Canvas</button>
+    </div>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>

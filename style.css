@@ -1,0 +1,83 @@
+/* *{
+    border: solid 4px red;
+} */
+
+
+body{
+    background-color: black;
+}
+
+.title{
+    color: green;
+    text-align: center;
+    font-family: 'Mukta', sans-serif;
+}
+
+
+#searchContainer{
+    /* border: solid 2px red; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#search_input{
+    font-family: 'Mukta', sans-serif;
+    color: black;
+}
+
+.searchBtn{
+    font-family: 'Mukta', sans-serif;
+    color: black;
+    /* padding: 10px; */
+}
+
+.searchBtn:hover{
+    opacity: 0.5;
+    background-color: lightgreen;
+}
+
+
+#lineChart{
+    width: 70%;
+    height: 100%;
+    margin: auto;
+    /* border: solid 2px red; */
+}
+
+
+#destroyCanvas{
+    margin: auto;
+    text-align: center;
+    font-family: 'Mukta', sans-serif;
+    color: black;
+}
+
+#destroyCanvas:hover{
+    opacity: 0.5;
+    background-color: red;
+}
+
+#destroying{
+    display: flex;
+}
+
+#month{
+    font-family: 'Mukta', sans-serif;
+}
+
+#day{
+    font-family: 'Mukta', sans-serif;
+}
+
+#year{
+    font-family: 'Mukta', sans-serif;
+}
+
+h2{
+    color: white;
+    text-align: center;
+}
+
+
+

@@ -17,7 +17,7 @@ let myChart;
 let container;
 let lineColor;
 
-
+// COMMENT(andymina)
 // Whenever we click destroy canvas, it will delete the line chart
 destroy_canvas.addEventListener("click", function (event) {
     myChart = document.getElementById("myChart")
@@ -50,6 +50,7 @@ search_form.addEventListener("submit", async function (event) {
   let year_number = year.value;
   let month_number = month.value;
   let day_number = day.value.padStart(2, '0')
+  // COMMENT(andymina)
   let future_day_number = parseInt(day_number) + 1
   labels.push(`${year_number}-${month_number}-${day_number}`)
   labels.push(`${year_number}-${month_number}-${future_day_number}`)
@@ -117,6 +118,7 @@ const fetchStockInfo = async (ticker_symbol) => {
     const response = await fetch(requestUrl);
     const data = await response.json();
     stockObject = data;
+    // COMMENT(andymina);
     console.log(stockObject);
   } catch (error) {
     console.log("This is your error" + error);
@@ -128,6 +130,7 @@ const fetchStockInfo = async (ticker_symbol) => {
 //Main function for the math
 const stockMathInfo = async (year_number, month_number, day_number, symbol) => {
 
+    // COMMENT(andymina)
   //Calling the information from the fetch call
   await fetchStockInfo(symbol)
     .then(() => {
@@ -146,6 +149,7 @@ const stockMathInfo = async (year_number, month_number, day_number, symbol) => {
       }
 
 
+      // COMMENT(andymina)
         // For loop so that we can do the math of previous days
       for(let i = 0; i<10; i++){
     
@@ -158,12 +162,14 @@ const stockMathInfo = async (year_number, month_number, day_number, symbol) => {
         if(i == 0){
             startingStockValue = stockObject["Time Series (Daily)"][`${year_number}-${month_number}-${day_number}`]["1. open"]
             prices.push(parseInt(startingStockValue))
+            // COMMENT(andymina)
             continue;
         }
 
         // Every other day before 
         else {
             // If it's a weekend, skip this iteration
+            // COMMENT(andymina)
             if(!(currentDate in stockObject["Time Series (Daily)"])){
                 console.log(currentDate)
                 continue;

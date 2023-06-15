@@ -36,6 +36,9 @@ console.log(typeof(days))
 
 let same_day = false;
 
+
+
+
 // On submission of the form, we'll run this
 search_form.addEventListener("submit", async function (event) {
 
@@ -80,6 +83,7 @@ search_form.addEventListener("submit", async function (event) {
       container.appendChild(myChart)
       let final_add = parseInt(stockMathInfo(year_number, month_number, day_number, stockData))
       console.log(final_add)
+      // console.log(final_add)
 
       startingStockValue = parseInt(stockData["Time Series (Daily)"][`${year_number}-${month_number}-${((parseInt(day_number) - 1).toString()).padStart(2, '0')}`]["1. open"])
       prices.push(startingStockValue)
@@ -91,14 +95,24 @@ search_form.addEventListener("submit", async function (event) {
       for(let i = 2; i<10; i++){
         // console.log(((parseInt(day_number) + i).toString()).padStart(2, '0'))
 
+        //We are in fact, in this bitch
+        console.log("we in this bitch")
 
         //future day as string with a leading 0 in case
         let futureDay = ((parseInt(day_number) + i).toString()).padStart(2, '0')
 
+        if(i == 2){
+          console.log(futureDay)
+          
+        }
+
         //Push the labels onto the x axis (these are the dates)
 
         //Only pushing labels into the array if they aren't weekends
-        
+        if(i == 2){
+          console.log(`${year_number}-${month_number}-${futureDay}`)
+        }
+
         labels.push(`${year_number}-${month_number}-${futureDay}`)
         
         
@@ -106,18 +120,69 @@ search_form.addEventListener("submit", async function (event) {
         //Day before price to compare
         // console.log(prices)
         let previousPrice = prices[i-1] 
+
+        if(i == 2){
+          console.log(previousPrice)
+        }
+
         // console.log(`This is i: ${i} and this is the undefined: ${previousPrice}`)
 
 
         // pull the future day average (of the 10 days previous) which will return the average 
         let future_day_average = Math.round(((parseInt(stockMathInfo(year_number, month_number, futureDay, stockData))) * 100)/100)
+        if(i == 2){
+          console.log(future_day_average)
+        }
 
         // Pushing into our prices list for the y axis
         let future_push = previousPrice + future_day_average
         
+        if(i == 2){
+          console.log(future_push)
+        }
+
         prices.push(future_push)
 
       }
+
+
+      
+      console.log(labels)
+      console.log(prices)
+
+
+      //Depending on the sign of the resulting average, this is what we do ->> (also changing line color if negative slope)
+      if(final_add<0){
+        answer_div.innerHTML = "<h2>I advise NOT to buy</h2>"
+        lineColor = "red"
+      }
+      else if(final_add>0){
+        answer_div.innerHTML = "<h2>I advise TO buy</h2>"
+        lineColor = "green"
+      }else{
+        console.log("Flip a coin")
+      }
+
+
+      // This is the actual chart.js portion creating the chart
+      const ctx = document.getElementById("myChart").getContext('2d')
+      myChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+              labels: labels,
+              datasets: [{
+                  label: 'Stock Prices',
+                  data: prices,
+                  borderColor: lineColor,
+                  backgroundColor: 'green',
+              }]
+          },
+      })
+    
+      search_button.innerHTML = "Delete canvas"
+      
+      destroySearch = true; 
+      search_button.style.backgroundColor = "red";
 
     } 
     else if (!(`${year_number}-${month_number}-${day_number}` in stockData["Time Series (Daily)"])){
@@ -307,38 +372,79 @@ const stockMathInfo = (year_number, month_number, day_number, stockData) => {
       // } 
 
       // Day before
-      let fake_i = ((parseInt(day_number) - i).toString()).padStart(2,"0")
 
+      if(i == 0){
 
+        //Declaring our first date kinda thing
+        let fake_i = ((parseInt(day_number) - 1).toString()).padStart(2,"0")
 
-      //If the very first 
-      if(`${year_number}-${month_number}-${fake_i}` in stockData["Time Series (Daily)"]){
+        //Making sure the day before is NOT weekend
+        if(`${year_number}-${month_number}-${fake_i}` in stockData["Time Series (Daily)"]){
+          let currentDate = `${year_number}-${month_number}-${fake_i}`
+
+          //Getting our starting value we will constantly subtract from
+          startingStockValue = parseInt(stockData["Time Series (Daily)"][`${currentDate}`]["1. open"])
+        }
+
+      } else {
+
+        //Day before
+        let fake_i = ((parseInt(day_number) - i).toString()).padStart(2,"0")
         let currentDate = `${year_number}-${month_number}-${fake_i}`
-        let test = ((parseInt(day_number) - 1).toString()).padStart(2, '0')
-        console.log(test)
-        console.log(typeof(test))
-        console.log(day_number)
-        console.log(currentDate)
-        console.log(typeof(year_number))
-        console.log(`${year_number}-${month_number}-${test}`)
 
-        let test2 = stockData["Time Series (Daily)"][`${year_number}-${month_number}-${day_number}`]
-        console.log(test2)
+        //If it's a valid date
+        if((currentDate in stockData["Time Series (Daily)"])){
 
-        startingStockValue = parseInt(stockData["Time Series (Daily)"][`${year_number}-${month_number}-${day_number}`]["1. open"])
-        console.log(startingStockValue)
+          let temp = startingStockValue - stockData["Time Series (Daily)"][`${year_number}-${month_number}-${fake_i}`]['1. open']
+          average = average + temp
+            
+        }
+
+      }
       
 
 
-        if(i!=0){
-          if((currentDate in stockData["Time Series (Daily)"])){
+      //Making sure the day before IS NOT a weekend 
+      // if(`${year_number}-${month_number}-${fake_i}` in stockData["Time Series (Daily)"]){
+      //   let currentDate = `${year_number}-${month_number}-${fake_i}`
+      //   let test = ((parseInt(day_number) - 1).toString()).padStart(2, '0')
+      //   // console.log(test)
+      //   // console.log(typeof(test))
+      //   // console.log(day_number)
+      //   console.log(currentDate)
+      //   // console.log(typeof(year_number))
+      //   // console.log(`${year_number}-${month_number}-${test}`)
 
-            let temp = startingStockValue - stockData["Time Series (Daily)"][`${year_number}-${month_number}-${fake_i}`]['1. open']
-            average = average + temp
+
+      //   // let test2 = stockData["Time Series (Daily)"][`${year_number}-${month_number}-${day_number}`]
+      //   // console.log(test2)
+
+      //   if(i == 0){
+      //     startingStockValue = parseInt(stockData["Time Series (Daily)"][`${year_number}-${month_number}-${test}`]["1. open"])
+      //   }
+      //   else{
+      //     if((currentDate in stockData["Time Series (Daily)"])){
+
+      //       let temp = startingStockValue - stockData["Time Series (Daily)"][`${year_number}-${month_number}-${fake_i}`]['1. open']
+      //       average = average + temp
               
-          }
-        }
-      } else { continue;}
+      //     }
+      //   }
+      //   // startingStockValue = parseInt(stockData["Time Series (Daily)"][`${year_number}-${month_number}-${day_number}`]["1. open"])
+      //   // console.log(startingStockValue)
+      
+
+
+      //   // if(i!=0){
+      //   //   if((currentDate in stockData["Time Series (Daily)"])){
+
+      //   //     let temp = startingStockValue - stockData["Time Series (Daily)"][`${year_number}-${month_number}-${fake_i}`]['1. open']
+      //   //     average = average + temp
+              
+      //   //   }
+      //   // }
+      // } 
+      // else { continue;}
       
       
 

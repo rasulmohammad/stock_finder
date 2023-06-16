@@ -2,14 +2,15 @@
 const apiKey = "VOD7R1UWRFPML3LZ";
 const apiURL = "https://www.alphavantage.co/query";
 
-//DOM elements
+
+//DOM elements WITH a calendar
 let search_form = document.getElementById("search_bar");
 let destroy_canvas = document.getElementById('destroyCanvas');
-let year = document.getElementById("year");
-let month = document.getElementById("month");
-let day = document.getElementById("day");
+let calendar_date = document.getElementById("calendar")
 let answer_div = document.getElementById("answer")
 let search_button = document.querySelector(".searchBtn")
+
+
 
 //Stocks global variables
 let stockObject;
@@ -31,10 +32,13 @@ let count = 0
 //Date
 const date = new Date()
 let days = ((date.getDate()).toString()).padStart(2,"0")
-console.log(days)
-console.log(typeof(days))
+// console.log(days)
+// console.log(typeof(days))
 
 let same_day = false;
+let futureDay;
+
+
 
 
 
@@ -49,6 +53,9 @@ search_form.addEventListener("submit", async function (event) {
   labels = []
   prices = []
 
+  //alert
+  let is_alert = false;
+
 //false = no canvas = should have red delete button 
 //true = canvas = should have white search button that has green when hovered
 
@@ -58,11 +65,27 @@ search_form.addEventListener("submit", async function (event) {
     search_button.addEventListener("mouseover", (event) => {search_button.style.backgroundColor = "red"})
     search_button.addEventListener("mouseout", (event) => {search_button.style.backgroundColor = "white"})
 
-    //We have the users input
+    //THIS IS FOR THE FORM BUTTONS WITH A CALENDAR
     let symbol = document.getElementById("search_input").value;
-    let year_number = year.value;
-    let month_number = month.value.padStart(2,'0')
-    let day_number = day.value.padStart(2, '0')
+    let selected_date = calendar_date.value
+
+    console.log(`This is the selected date${selected_date}`)
+
+    if(symbol == "" || selected_date == "" ){
+      console.log(symbol)
+      console.log(selected_date)
+      alert("You did not fill out all the fields")
+      is_alert = true;
+    }
+
+    let split_date = selected_date.split("-")
+
+    let year_number = split_date[0]
+    let month_number = split_date[1]
+    let day_number = split_date[2]
+
+    console.log(year_number)
+    console.log(month_number)
 
     // console.log(typeof(day_number))
 
@@ -152,14 +175,15 @@ search_form.addEventListener("submit", async function (event) {
 
 
       //Depending on the sign of the resulting average, this is what we do ->> (also changing line color if negative slope)
-      if(final_add<0){
+      if(prices[0]>prices[labels.length-1]){
         answer_div.innerHTML = "<h2>I advise NOT to buy</h2>"
         lineColor = "red"
       }
-      else if(final_add>0){
+      else if(prices[0]<prices[labels.length-1]){
         answer_div.innerHTML = "<h2>I advise TO buy</h2>"
         lineColor = "green"
       }else{
+        console.log(prices)
         console.log("Flip a coin")
       }
 
@@ -174,7 +198,7 @@ search_form.addEventListener("submit", async function (event) {
                   label: 'Stock Prices',
                   data: prices,
                   borderColor: lineColor,
-                  backgroundColor: 'green',
+                  backgroundColor: 'transparent',
               }]
           },
       })
@@ -186,8 +210,15 @@ search_form.addEventListener("submit", async function (event) {
 
     } 
     else if (!(`${year_number}-${month_number}-${day_number}` in stockData["Time Series (Daily)"])){
+      console.log(stockData["Time Series (Daily)"][`${year_number}-${month_number}-${day_number}`])
+      console.log(`This is the year: ${year_number}`)
+      console.log(`This is the month: ${month_number}`)
+      console.log(`This is the day number: ${day_number}`)
       console.log(`${year_number}-${month_number}-${day_number}` + "This is the wrong date somehow?")
-      alert("You selected a weekend date, try another one please")
+      if(!(is_alert)){
+        alert("You selected a weekend date or one in the future, try another one please")
+      }
+      
     } 
     else {
         // Creating a canvas 
@@ -196,7 +227,7 @@ search_form.addEventListener("submit", async function (event) {
         myChart.id = "myChart"
         container.appendChild(myChart)
         let final_add = parseInt(stockMathInfo(year_number, month_number, day_number, stockData))
-        console.log(typeof(final_add))
+        console.log(final_add)
         
 
         startingStockValue = parseInt(stockData["Time Series (Daily)"][`${year_number}-${month_number}-${day_number}`]["1. open"])
@@ -222,14 +253,22 @@ search_form.addEventListener("submit", async function (event) {
 
 
           //future day as string with a leading 0 in case
-          let futureDay = ((parseInt(day_number) + i).toString()).padStart(2, '0')
+          
+          // console.log((parseInt(day_number) + i))
+
+          
+          futureDay = ((parseInt(day_number) + i).toString()).padStart(2, '0')
+          
 
           //Push the labels onto the x axis (these are the dates)
           console.log(labels)
 
           //Only pushing labels into the array if they aren't weekends
           if(`${year_number}-${month_number}-${futureDay}` in stockData["Time Series (Daily)"]){
+            console.log(`${year_number}-${month_number}-${futureDay}`)
             labels.push(`${year_number}-${month_number}-${futureDay}`)
+          } else {
+            console.log(`This is the else: ${year_number}-${month_number}-${futureDay}`)
           }
           
 
@@ -258,11 +297,11 @@ search_form.addEventListener("submit", async function (event) {
 
 
         //Depending on the sign of the resulting average, this is what we do ->> (also changing line color if negative slope)
-        if(final_add<0){
+        if(prices[0]>prices[labels.length-1]){
           answer_div.innerHTML = "<h2>I advise NOT to buy</h2>"
           lineColor = "red"
         }
-        else if(final_add>0){
+        else if(prices[0]<prices[labels.length-1]){
           answer_div.innerHTML = "<h2>I advise TO buy</h2>"
           lineColor = "green"
         }else{
@@ -296,10 +335,12 @@ search_form.addEventListener("submit", async function (event) {
   } else{
 
       //We have the users input
-      document.getElementById("search_input").value = ''
-      document.getElementById("year").value = ''
-      document.getElementById("month").value = ''
-      document.getElementById("day").value = ''
+      // document.getElementById("search_input").value = ''
+      // document.getElementById("year").value = ''
+      // document.getElementById("month").value = ''
+      // document.getElementById("day").value = ''
+
+      calendar_date.value = ""
 
       search_button.addEventListener("mouseover", (event) => {search_button.style.backgroundColor = "green"})
       search_button.addEventListener("mouseout", (event) => {search_button.style.backgroundColor = "white"})
@@ -310,6 +351,8 @@ search_form.addEventListener("submit", async function (event) {
       answer_div.innerHTML = "<h2>What's the verdict?</h2>"
       search_button.innerHTML = "Search"
       destroySearch = false;
+
+      
 
       
   }
@@ -402,71 +445,10 @@ const stockMathInfo = (year_number, month_number, day_number, stockData) => {
 
       }
       
-
-
-      //Making sure the day before IS NOT a weekend 
-      // if(`${year_number}-${month_number}-${fake_i}` in stockData["Time Series (Daily)"]){
-      //   let currentDate = `${year_number}-${month_number}-${fake_i}`
-      //   let test = ((parseInt(day_number) - 1).toString()).padStart(2, '0')
-      //   // console.log(test)
-      //   // console.log(typeof(test))
-      //   // console.log(day_number)
-      //   console.log(currentDate)
-      //   // console.log(typeof(year_number))
-      //   // console.log(`${year_number}-${month_number}-${test}`)
-
-
-      //   // let test2 = stockData["Time Series (Daily)"][`${year_number}-${month_number}-${day_number}`]
-      //   // console.log(test2)
-
-      //   if(i == 0){
-      //     startingStockValue = parseInt(stockData["Time Series (Daily)"][`${year_number}-${month_number}-${test}`]["1. open"])
-      //   }
-      //   else{
-      //     if((currentDate in stockData["Time Series (Daily)"])){
-
-      //       let temp = startingStockValue - stockData["Time Series (Daily)"][`${year_number}-${month_number}-${fake_i}`]['1. open']
-      //       average = average + temp
-              
-      //     }
-      //   }
-      //   // startingStockValue = parseInt(stockData["Time Series (Daily)"][`${year_number}-${month_number}-${day_number}`]["1. open"])
-      //   // console.log(startingStockValue)
-      
-
-
-      //   // if(i!=0){
-      //   //   if((currentDate in stockData["Time Series (Daily)"])){
-
-      //   //     let temp = startingStockValue - stockData["Time Series (Daily)"][`${year_number}-${month_number}-${fake_i}`]['1. open']
-      //   //     average = average + temp
-              
-      //   //   }
-      //   // }
-      // } 
-      // else { continue;}
-      
-      
-
-      // startingStockValue = parseInt(stockData["Time Series (Daily)"][`${year_number}-${month_number}-${((parseInt(day_number) - 1).toString()).padStart(2, '0')}`]["1. open"])
-      // console.log(startingStockValue)
-      
-
-
-      // if(i!=0){
-      //   if((currentDate in stockData["Time Series (Daily)"])){
-
-      //     let temp = startingStockValue - stockData["Time Series (Daily)"][`${year_number}-${month_number}-${fake_i}`]['1. open']
-      //     average = average + temp
-            
-      //   }
-      // }
-      
-
     }
 
     else{
-      console.log("WE AREE NOTG HERE")
+      // console.log("WE AREE NOTG HERE")
       //For when we call in the other for loop, we want to make sure we can actually access it (aka not a weekend)
       if(!(`${year_number}-${month_number}-${day_number}` in stockData["Time Series (Daily)"])){
         continue;
@@ -492,48 +474,18 @@ const stockMathInfo = (year_number, month_number, day_number, stockData) => {
           if((currentDate in stockData["Time Series (Daily)"])){
 
             let temp = startingStockValue - stockData["Time Series (Daily)"][`${year_number}-${month_number}-${fake_i}`]['1. open']
+            console.log(temp)
             average = average + temp
-              
+            
           }
           
       }
     }
 
-    // //For when we call in the other for loop, we want to make sure we can actually access it (aka not a weekend)
-    // if(!(`${year_number}-${month_number}-${day_number}` in stockData["Time Series (Daily)"])){
-    //   continue;
-    // } 
 
-    // // So the numbers don't get mixed up
-    // let fake_i = ((parseInt(day_number) - i).toString()).padStart(2,"0")
-    // let currentDate = `${year_number}-${month_number}-${fake_i}`
-
-
-    // // Get our starting/comparing point value (day of)
-    
-    // startingStockValue = stockData["Time Series (Daily)"][`${year_number}-${month_number}-${day_number}`]["1. open"]
-
-    //     // prices.push(parseInt(startingStockValue))
-    //     // count++
-    //     // console.log(`This is the ${count}th time and this is the value:${startingStockValue}`)
-    
-
-    // // Every other day before 
-    // if(i!=0) {
-    //     // If it's not a weekend, skip this iteration
-    //     if((currentDate in stockData["Time Series (Daily)"])){
-
-    //       let temp = startingStockValue - stockData["Time Series (Daily)"][`${year_number}-${month_number}-${fake_i}`]['1. open']
-    //       average = average + temp
-            
-    //     }
-        
-    // }
   }
 
   // console.log(average)
   return average;
 
 };
-
- 

@@ -88,42 +88,46 @@ search_form.addEventListener("submit", async (event) => {
         pricesArr.push(startingStockValue) 
 
 
-        // console.log(labelsArr);
-        // console.log(pricesArr);
+        console.log(labelsArr);
+        console.log(pricesArr);
+
+        // console.log("This is a test for our psuedo-first iteration: ", changingDay(selected_date, 4, true).date)
 
         // General logic: 
         // Take the selected date and use the 10 days back function.
         let count = 1; // Number of items in the prices array
-        while(pricesArr.length != 10){
+        while(labelsArr.length != 10){
 
-
-          
 
           // Get next date:
           let pushedDate = changingDay(selected_date, count, true).date;
           let pushedDateObj = new Date(pushedDate + 'T00:00:00');
 
-          // console.log(pushedDate)
-          // console.log(pushedDateObj);
-
           // If this date is a weekend, let's just increase count and move onto the next iteration
-          if(pushedDateObj.getDay() == 5 || pushedDateObj.getDay() == 6){  
+          if(pushedDateObj.getDay() == 6 || pushedDateObj.getDay() == 0){  
             count++;
             continue;
           }
 
-          // We know it's a valid day:
+          // We know it's a weekday:
           labelsArr.push(pushedDate);
-          // console.log(labelsArr)
 
-          // Now for the math
-            // We know we have a valid date:
-          let finalPriceForPushedDate = mathForPreviousDays(pushedDate, apiData, labelsArr);
-          pricesArr.push(finalPriceForPushedDate);
+
+
+          // console.log("This is the date we finding for on first iteration: ", pushedDate)
+          let temp = mathForPreviousDays(pushedDate, apiData, labelsArr)
+          // console.log(temp)
+          pricesArr.push(temp)
+          // console.log(apiData)
+          
+
+
+
           count++;
 
         }
 
+        console.log(labelsArr);
       
 
         // Updating chart line color + heading above it
@@ -161,12 +165,6 @@ search_form.addEventListener("submit", async (event) => {
 });
 
 
-function overrideInfo(){
-  // This is for when you're going in the future and have to override some of the existing values;
-}
-
-
-
 //Fetching information of the stoc
 const fetchStockInfo = async (ticker_symbol) => {
 
@@ -179,7 +177,7 @@ const fetchStockInfo = async (ticker_symbol) => {
   //Fetch call. Waiting for the fetch to store in "response", then waiting for response before we save it in JSON form to "data"
   try {
     const mina = await fetch(`${apiURL}/${functionParam}?symbol=${ticker_symbol}&interval=${interval}&apikey=${apiKey}`).then(t => t.json());
-    console.log('mina', mina);
+    // console.log('mina', mina);
     return mina;
   } 
   catch (error) {
@@ -201,11 +199,12 @@ function mathForPreviousDays(inputtedDate, dataObj, labelsArr){
   let avg = 0; 
   let datesArr = []; // this is so that we can find the previous 10 day that actually have values from our date of comparison 
 
-  let daysBack = 1;
+  let daysBack = 0;
   while(datesArr.length != 10){
 
     let chosenDateFromPast = changingDay(previousDate, daysBack, false).date;
     if(!checkValidDay(chosenDateFromPast, dataObj).bool){ // if there isn't a price for this date, we push back more and continue the loop
+      // console.log("This date should have no entry: ", chosenDateFromPast)
       daysBack++;
       continue;
     }
@@ -213,34 +212,36 @@ function mathForPreviousDays(inputtedDate, dataObj, labelsArr){
     // We have an existing price for the date;
     datesArr.push(chosenDateFromPast);
     daysBack++;
-    // console.log(datesArr)
 
   }
 
+  console.log("We have our 10 dates");
+  console.log(datesArr)
   for(let i = 0; i < datesArr.length; i++){
 
     // Find price for date (and we know this WILL exist since our loop before checks for it)
     let value = parseInt(findOpenValueForDate(datesArr[i], dataObj));
+    // console.log("We are console logging the prices of each valid date: ", value);
     let diff = priceOfDate - value;
-
+    // console.log(`Right now, we're subtracting ${priceOfDate} - ${value} = ${diff}`);
+    // console.log(diff);
+    // console.log(`Before wwe add it to average, this is avg: ${avg}`)
     avg += diff;
+    // console.log(`This is avg after we add it: ${avg}`)
 
   }
 
   let finalPrice = priceOfDate + avg;
-  // console.log(finalPrice);
 
   // WE HAVE TO UPDATE THE OBJECT HERE:
-  let newElement = {
-    "datetime": inputtedDate,
-    "close": finalPrice
-  }
+  updateOrAddEntry(inputtedDate, finalPrice, dataObj);
 
-  dataObj.values.push(newElement);
-
+  // console.log("We're about to return and this function was originally called with: ", inputtedDate);
   return finalPrice;
 
 }
+
+
 
 
 // Checking all valid day cases
@@ -254,7 +255,7 @@ function checkValidDay(selected_date, stockData){
   
   let tempSelectedDate = new Date(selected_date);
   let earliestAvailableDate = new Date();
-  earliestAvailableDate.setDate(earliestAvailableDate.getDate() - 40);
+  earliestAvailableDate.setDate(earliestAvailableDate.getDate() - 35); // need to update this stuff
 
   const dateExists = stockData["values"].find(item => item["datetime"] === selected_date);
 
@@ -301,6 +302,27 @@ function findOpenValueForDate(dateToFind, stockData){
 
 }
 
+
+function updateOrAddEntry(datetimeKey, closeKey, stockData){
+
+  // We want to check if the datetimeKey already exists
+  const keyIndex = stockData.values.findIndex(entry => entry.datetime === datetimeKey);
+
+  // Exists
+  if(keyIndex !== -1){
+    stockData.values[keyIndex].close = closeKey;
+  }
+  else{
+
+    let newEntry = {
+      "datetime": datetimeKey,
+      "close": closeKey
+    }
+
+    stockData.values.push(newEntry);
+  }
+
+}
 
 
 function initializeCanvas(){
@@ -351,19 +373,9 @@ function drawChart(){
 
 function changingDay(controlDate, includedDays, isMovingForward){
 
-
-
-  // first call shoudl be 2023-10-25 but then tempdate b
-  // THIS FUNCTION WORKS PROPERLY NOW!
-
   const tempDate = new Date(controlDate + 'T00:00:00');
-  // console.log(`Line 347 after creating tempDate, this is controlDate: ${controlDate} and this is tempDate: ${tempDate}`);
-  
   const newTempDate = new Date(tempDate);
   newTempDate.setDate(isMovingForward ? newTempDate.getDate() + includedDays : newTempDate.getDate() - includedDays)
-  // console.log(`lINE 356 after setDate of tempDate, this is controlDate: ${controlDate} and this is tempDate after the respective change of days: ${tempDate}`)
-
-  // console.log("this is the function tempDate after logic: " + tempDate)
 
   let year = newTempDate.getFullYear();
   let month = (newTempDate.getMonth() + 1).toString().padStart(2, "0");
@@ -381,22 +393,26 @@ function changingDay(controlDate, includedDays, isMovingForward){
 // looking for a weekday date that we can use etc
 function nextMostValidDay(controlDate, increment, isMovingForward){
 
-
-
   // We want to return the closest weekday date based on the incremented value
   // Check if not already weekend
   let newDate = new Date(changingDay(controlDate, increment, isMovingForward).date);
 
-  // Saturday: we return monday's date
+  // Saturday: we return monday's date (we iuncreased by 2)
   if(newDate.getDay() == 5){
     return changingDay(controlDate, increment + 2, isMovingForward).date;
   }
 
+  //Sunday, we return monday's date (increase by 1)
   if(newDate.getDay() == 6){
     return changingDay(controlDate, increment + 1, isMovingForward).date;
   }
 
+  
   return changingDay(controlDate, increment, isMovingForward).date;
 
+
+}
+
+function nextDay(controlDate, increment){
 
 }
